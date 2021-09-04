@@ -90,6 +90,7 @@ let rdP1Score = document.getElementById("RdP1Score");
 let rdP2Score = document.getElementById("RdP2Score");
 let rdP3Score = document.getElementById("RdP3Score");
 //DOM variables - Display area
+let bckgrdLogo = document.getElementById("BckgrdLogo");
 let displayArea = document.getElementById("DisplayArea");
 let dlrDisplay = document.getElementById("DlrDisplay");
 let dlrDisplayCards = document.getElementById("DlrDisplayCards");
@@ -110,6 +111,7 @@ let p3DisplayPoints = document.getElementById("P3DisplayPoints");
 ///////////////////////////////////////
 //Button Triggered Functions
 ///////////////////////////////////////
+//Trigerred by newGameBtn
 function startGame() {
   createPlayers(numPlayers);
   setupScreen();
@@ -117,28 +119,27 @@ function startGame() {
   cal();
 }
 
-//Game conts, playersData kept. Just player and dealer status/hands/pts reset to nil. This Round score also reset
+//Trigerred by dealAgainBtn
 function dealAgain() {
   const enableList = [hitBtn, stayBtn];
-  enableList.forEach((e) => e.removeAttribute("style"));
+  enableList.forEach((e) => e.removeAttribute("style")); //unhides hitBtn & stayBtn
 
   const resetList = [rdDlrScore, rdP1Score, rdP2Score, rdP3Score];
-  resetList.forEach((e) => (e.innerHTML = ""));
+  resetList.forEach((e) => (e.innerHTML = "")); //clears This Round score display
 
   const hideList = [p2Display, p3Display];
-  hideList.forEach((e) => e.classList.add("hidden"));
+  hideList.forEach((e) => e.classList.add("hidden")); //hides p2 & p3 card displays
 
   playersData.forEach(function (el) {
     el.Hand = [];
     el.Pts = 0;
     el.Status = "Open";
-  });
-
+  }); //reset relevant elements for ea player
   deal();
   cal();
 }
 
-/*Reset everything back to original state. No need to reset playDeck and remainingPlayers. It will be reset when dealing cards*/
+//Trigerred by restartBtn
 function restartGame() {
   playersData = [];
   round = 0;
@@ -146,6 +147,7 @@ function restartGame() {
   resetScreen();
 }
 
+//Trigerred by hitBtn
 function hit() {
   const playingNow = playersData.find(
     (e) => e.Name === remainingPlayers[0].Name
@@ -155,33 +157,37 @@ function hit() {
     stay();
   } else {
     playingNow.Hand.push(playDeck.pop());
-    console.log(playingNow.Name, " hits");
+    console.log(playingNow.Name, " hits"); //for debugging
     cal();
   }
 }
 
+//Trigerred by stayBtn
 function stay() {
   const playingNow = playersData.find(
     (e) => e.Name === remainingPlayers[0].Name
   );
   playingNow.Status = "Closed";
   remainingPlayers = playersData.filter((e) => e.Status === "Open");
+
+  if (remainingPlayers.length === 1) {
+    dealerDraws();
+  } else {
+    redrawScreen();
+  }
+
   console.log(
     playingNow.Name,
     " stays",
     "Remaining players ",
     remainingPlayers
-  );
-  redrawScreen();
-  if (remainingPlayers.length === 1) {
-    dealerDraws();
-  }
+  ); //for debugging
 }
 
 ///////////////////////////////////////
 //Helper Functions
 ///////////////////////////////////////
-//Only called for every new round. So start w new deck. Round shld go up by 1 & remainingPlayers reset.
+//Called by startGame(), dealAgain()
 function deal() {
   playDeck = shuffle(startDeck.slice());
   round += 1;
@@ -191,6 +197,7 @@ function deal() {
   }
 }
 
+//Called by startGame(), dealAgain(), hit(), dealerDraws()
 function cal() {
   playersData.forEach(function (elPlayer) {
     const totalPoints = elPlayer.Hand.reduce((a, b) => {
@@ -215,40 +222,52 @@ function cal() {
   });
   const dealer = playersData[numPlayers];
   if (dealer.Hand.length === 2 && dealer.Pts >= 21) {
-    roundResults();
+    roundResults(); //ends round immediately if dealer blackjack
   } else {
     redrawScreen();
-    test();
+    test(); //for debugging
   }
 }
 
-//&& comparison to prevent dealer from drawing more than 5 cards and busting
+//Called by stay()
 function dealerDraws() {
   const dealer = playersData[numPlayers];
   while (dealer.Pts < 17 && dealer.Hand.length < 6) {
+    //prevent dealer from drawing more than 5 cards and busting
     dealer.Hand.push(playDeck.pop());
     cal();
   }
   roundResults();
 }
 
-//Updating UI for round's score needs to be in here cos use local variable
+//Called by cal(), dealerDraws()
 function roundResults() {
   const disableList = [hitBtn, stayBtn];
-  disableList.forEach((e) => (e.style.display = "none"));
+  disableList.forEach((e) => (e.style.display = "none")); //hitBtn and stayBtn no longer needed. so hide them. .hidden class did not work. so directly added style of display: none
 
   let thisRdScore = [0, 0, 0, 0];
   const dealer = playersData[numPlayers];
 
   for (let i = 0; i < numPlayers; i++) {
     const player = playersData[i];
-    if (player.Pts > 21) {
+    if (
+      player.Pts > 21 &&
+      player.Hand.length === 2 &&
+      dealer.Hand.length === 2 &&
+      dealer.Pts < 21
+    ) {
+      player.Score += 1;
+      thisRdScore[i] += 1;
+    } else if (player.Pts > 21) {
       if (dealer.Pts <= 21) {
         dealer.Score += 1;
         thisRdScore[3] += 1;
       }
     } else if (player.Pts <= 21)
-      if (dealer.Pts > 21) {
+      if (dealer.Pts > 21 && dealer.Hand.length === 2) {
+        dealer.Score += 1;
+        thisRdScore[3] += 1;
+      } else if (dealer.Pts > 21) {
         player.Score += 1;
         thisRdScore[i] += 1;
       } else if (dealer.Pts <= 21) {
@@ -267,6 +286,7 @@ function roundResults() {
         }
       }
   }
+  //Updating UI for round's scores needs to be in here cos use local variable
   rdDlrScore.innerHTML = thisRdScore[3];
   rdP1Score.innerHTML = thisRdScore[0];
   if (numPlayers === 3) {
@@ -281,14 +301,22 @@ function roundResults() {
 //*****************************************************************
 //UI Codes
 //*****************************************************************
+//Called by startGame()
 function setupScreen() {
   textUpdates.innerHTML = ` <p> <strong> Round ${round} </strong><br> Hit: Add card  •  Stay: Keep current cards <br> Deal Again: Redeal Cards  •  Restart: Restart Game</p>`;
+
   header.forEach((e) => e.classList.add("hidden"));
+
   newGameBox.classList.add("hidden");
+
   const unhideList = [othBtnsBox, scoreBox, dlrDisplay, nowPlayerDisplay];
   unhideList.forEach((e) => e.classList.remove("hidden"));
+
   const enableList = [hitBtn, stayBtn];
   enableList.forEach((e) => e.removeAttribute("style"));
+
+  const imgList = [bckgrdLogo];
+  imgList.forEach((e) => (e.style.opacity = 0.1)); //change backgrd logo opacity
 
   if (numPlayers === 2) {
     p2Head.innerHTML = "Player 2";
@@ -298,31 +326,40 @@ function setupScreen() {
   }
 }
 
+// Called by cal(), stay()
 function redrawScreen() {
   textUpdates.innerHTML = ` <p> <strong> Round ${round} </strong><br> Hit: Add card  •  Stay: Keep current cards <br> Deal Again: Redeal Cards  •  Restart: Restart Game</p>`;
+
   remainingPlayers = playersData.filter((e) => e.Status === "Open");
   const playingNow = playersData.find(
     (e) => e.Name === remainingPlayers[0].Name
   );
 
-  /* dlrScore.innerHTML = playersData[numPlayers].Score;
-  p1Score.innerHTML = playersData[0].Score; */
-  nowPlayer.innerHTML = playingNow.Name;
   dlrDisplayCards.innerHTML = `<i class="${playersData[numPlayers].Hand[1].Suit}">${playersData[numPlayers].Hand[1].Value}</i>`;
-  dlrDisplayPoints.innerHTML = "";
+  dlrDisplayPoints.innerHTML = ""; //show only 2nd card for dealer & dun show any points
+
+  nowPlayer.innerHTML = playingNow.Name;
   nowPlayerDisplayCards.innerHTML = createCardsDisplay(playingNow);
   nowPlayerDisplayPoints.innerHTML = `Points: ${playingNow.Pts}`;
+  //shows current player data
 }
+
+//Called by roundResults()
 function endRoundScreen() {
   textUpdates.innerHTML = ` <p> <strong> Round ${round} over!</strong><br> Deal Again: Redeal Cards  •  Restart: Restart Game</p>`;
 
   dlrScore.innerHTML = playersData[numPlayers].Score;
   p1Score.innerHTML = playersData[0].Score;
-  nowPlayer.innerHTML = playersData[0].Name;
+  //def at least these 2 players, so show all rounds scores for them by default
+
   dlrDisplayCards.innerHTML = createCardsDisplay(playersData[numPlayers]);
-  nowPlayerDisplayCards.innerHTML = createCardsDisplay(playersData[0]);
   dlrDisplayPoints.innerHTML = `Points: ${playersData[numPlayers].Pts}`;
+  //show both dealer's cards and also points
+
+  nowPlayer.innerHTML = playersData[0].Name;
+  nowPlayerDisplayCards.innerHTML = createCardsDisplay(playersData[0]);
   nowPlayerDisplayPoints.innerHTML = `Points: ${playersData[0].Pts}`;
+  //this second display card will also player 1's data
 
   if (numPlayers === 2) {
     const unhideList = [p2Display];
@@ -330,9 +367,11 @@ function endRoundScreen() {
     p2Score.innerHTML = playersData[1].Score;
     p2DisplayCards.innerHTML = createCardsDisplay(playersData[1]);
     p2DisplayPoints.innerHTML = `Points: ${playersData[1].Pts}`;
+    //unhide 3rd display card and show player 2's data if player exists
   } else if (numPlayers === 3) {
     const unhideList = [p2Display, p3Display];
     unhideList.forEach((e) => e.classList.remove("hidden"));
+
     p2Score.innerHTML = playersData[1].Score;
     p2DisplayCards.innerHTML = createCardsDisplay(playersData[1]);
     p2DisplayPoints.innerHTML = `Points: ${playersData[1].Pts}`;
@@ -340,9 +379,11 @@ function endRoundScreen() {
     p3Score.innerHTML = playersData[2].Score;
     p3DisplayCards.innerHTML = createCardsDisplay(playersData[2]);
     p3DisplayPoints.innerHTML = `Points: ${playersData[2].Pts}`;
+    //unhide 3rd & 4th display cards and show player 2/3's data if players exist
   }
 }
 
+//Helper function whenever cards needed to be displayed
 function createCardsDisplay(player) {
   let result = `<i class="${player.Hand[0].Suit}">${player.Hand[0].Value}</i>`;
   for (let i = 1; i < player.Hand.length; i++) {
@@ -351,12 +392,18 @@ function createCardsDisplay(player) {
   return result;
 }
 
+//Called by restartGame()
 function resetScreen() {
   header.forEach((e) => e.classList.remove("hidden"));
+
   textUpdates.innerHTML =
     "<h3>Select number of players and click 'New Game' below to begin!</h3>";
-  const unhideList = [newGameBox, hitBtn, stayBtn];
+
+  const unhideList = [newGameBox];
   unhideList.forEach((e) => e.classList.remove("hidden"));
+
+  const enableList = [hitBtn, stayBtn, bckgrdLogo];
+  enableList.forEach((e) => e.removeAttribute("style")); //unhides hitBtn & stayBtn, restores opacity of bckgrd logo
 
   const hideList = [
     othBtnsBox,
