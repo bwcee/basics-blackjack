@@ -166,6 +166,12 @@
         height: 1.8rem;
       }
 
+      td.display-table-cards, td.display-table-text{
+        border: none;
+        font-size: 1rem;
+      }
+      
+
       i.club,
       i.diamond,
       i.heart,
@@ -265,60 +271,48 @@
     </table>
     <div id="DisplayArea">
       <div class="cards-display hidden" id="DlrDisplay">
-        Dealer<br /><br /><br />
+        <strong>Dealer</strong>
+        <br /><br /><br />
         <table class="display-table">
           <tr>
-            <td class="display-table-cards" id="DlrDisplayCards">
-              Cards Dealt
-            </td>
+            <td class="display-table-cards" id="DlrDisplayCards"></td>
           </tr>
           <tr>
-            <td class="display-table-text" id="DlrDisplayPoints">Points</td>
-          </tr>
-          <tr>
-            <td class="display-table-text" id="DlrDisplayStatus">Status</td>
+            <td class="display-table-text"><strong><span id="DlrDisplayPoints"></strong></span></td>
           </tr>
         </table>
       </div>
-      <div class="cards-display hidden" id="P1Display">
-        Player 1<br /><br /><br />
+      <div class="cards-display hidden" id="NowPlayerDisplay">
+        <strong><span id="NowPlayer">Player 1</span></strong
+        ><br /><br /><br />
         <table class="display-table">
           <tr>
-            <td class="display-table-cards" id="P1DisplayCards">Cards Dealt</td>
+            <td class="display-table-cards" id="NowPlayerDisplayCards"></td>
           </tr>
           <tr>
-            <td class="display-table-text" id="P1DisplayPoints">Points</td>
-          </tr>
-          <tr>
-            <td class="display-table-text" id="P1DisplayStatus">Status</td>
+          <td class="display-table-text"><strong><span id="NowPlayerDisplayPoints"></strong></span></td>
           </tr>
         </table>
       </div>
       <div class="cards-display hidden" id="P2Display">
-        Player 2<br /><br /><br />
+        <strong>Player 2</strong><br /><br /><br />
         <table class="display-table">
           <tr>
-            <td class="display-table-cards" id="P2DisplayCards">Cards Dealt</td>
+            <td class="display-table-cards" id="P2DisplayCards"></td>
           </tr>
           <tr>
-            <td class="display-table-text" id="P2DisplayPoints">Points</td>
-          </tr>
-          <tr>
-            <td class="display-table-text" id="P2DisplayStatus">Status</td>
+            <td class="display-table-text"><strong><span id="P2DisplayPoints"></strong></span></td>
           </tr>
         </table>
       </div>
       <div class="cards-display hidden" id="P3Display">
-        Player 3<br /><br /><br />
+        <strong>Player 3</strong><br /><br /><br />
         <table class="display-table">
           <tr>
-            <td class="display-table-cards" id="P3DisplayCards">Cards Dealt</td>
+            <td class="display-table-cards" id="P3DisplayCards"></td>
           </tr>
           <tr>
-            <td class="display-table-text" id="P3DisplayPoints">Points</td>
-          </tr>
-          <tr>
-            <td class="display-table-text" id="P3DisplayStatus">Status</td>
+            <td class="display-table-text"><strong><span id="P3DisplayPoints"></strong></span></td>
           </tr>
         </table>
       </div>
